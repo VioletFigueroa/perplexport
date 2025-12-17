@@ -4,7 +4,13 @@ export async function login(page: Page, email: string): Promise<void> {
   console.log("Navigating to Perplexity...");
   await page.goto("https://www.perplexity.ai/");
 
-  await page.click("button::-p-text('Accept All Cookies')");
+  // Try to accept cookies if the button exists, but don't fail if it doesn't
+  try {
+    await page.click("button::-p-text('Accept All Cookies')", { timeout: 5000 });
+    console.log("Cookie consent accepted");
+  } catch (error) {
+    console.log("Cookie button not found or already accepted, continuing...");
+  }
 
   // Wait for email input and enter credentials
   await page.waitForSelector('input[type="email"]');

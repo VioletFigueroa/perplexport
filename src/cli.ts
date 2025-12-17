@@ -9,7 +9,7 @@ program
   .name("perplexport")
   .description("Export Perplexity conversations as markdown files")
   .version("1.0.0")
-  .option("-o, --output <directory>", "Output directory for conversations", ".")
+  .option("-o, --output <directory>", "Output directory for conversations", "./conversations")
   .option(
     "-d, --done-file <file>",
     "Done file location (tracks which URLs have been downloaded before)",
