@@ -42,26 +42,38 @@ export default async function exportLibrary(options: ExportLibraryOptions) {
     const conversationSaver = new ConversationSaver(page);
     await conversationSaver.initialize();
 
-    for (const conversation of conversations) {
-      console.log(`Processing conversation ${conversation.url}`);
+    for (let i = 0; i < conversations.length; i++) {
+      const conversation = conversations[i];
+      console.log(`\n[${i + 1}/${conversations.length}] Processing: ${conversation.title}`);
+      console.log(`URL: ${conversation.url}`);
 
-      const threadData = await conversationSaver.loadThreadFromURL(
-        conversation.url
-      );
+      try {
+        const threadData = await conversationSaver.loadThreadFromURL(
+          conversation.url
+        );
 
-      // place the thread data in the output directory
-      await fs.writeFile(
-        `${options.outputDir}/${threadData.id}.json`,
-        JSON.stringify(threadData.conversation, null, 2)
-      );
+        // place the thread data in the output directory
+        const jsonPath = `${options.outputDir}/${threadData.id}.json`;
+        await fs.writeFile(
+          jsonPath,
+          JSON.stringify(threadData.conversation, null, 2)
+        );
+        console.log(`✓ Saved JSON: ${threadData.id}.json`);
 
-      // render conversation to markdown and save
-      const markdown = renderConversation(threadData.conversation);
-      await fs.writeFile(`${options.outputDir}/${threadData.id}.md`, markdown);
+        // render conversation to markdown and save
+        const markdown = renderConversation(threadData.conversation);
+        const mdPath = `${options.outputDir}/${threadData.id}.md`;
+        await fs.writeFile(mdPath, markdown);
+        console.log(`✓ Saved Markdown: ${threadData.id}.md`);
 
-      doneFile.processedUrls.push(conversation.url);
-      // Save after each conversation in case of interruption
-      await saveDoneFile(doneFile, options.doneFilePath);
+        doneFile.processedUrls.push(conversation.url);
+        // Save after each conversation in case of interruption
+        await saveDoneFile(doneFile, options.doneFilePath);
+        console.log(`✓ Progress saved`);
+      } catch (error) {
+        console.error(`✗ Error processing conversation:`, error);
+        // Continue with next conversation instead of crashing
+      }
 
       await sleep(2000); // don't do it too fast
     }
