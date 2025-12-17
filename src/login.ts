@@ -6,7 +6,9 @@ export async function login(page: Page, email: string): Promise<void> {
 
   // Try to accept cookies if the button exists, but don't fail if it doesn't
   try {
-    await page.click("button::-p-text('Accept All Cookies')", { timeout: 5000 });
+    const selector = "button::-p-text('Accept All Cookies')";
+    await page.waitForSelector(selector, { timeout: 3000 });
+    await page.click(selector);
     console.log("Cookie consent accepted");
   } catch (error) {
     console.log("Cookie button not found or already accepted, continuing...");
