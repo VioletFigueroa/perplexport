@@ -16,22 +16,11 @@ export async function scrollToBottomOfConversations(
   });
 
   let scrollAttempts = 0;
-  const maxScrollAttempts = 20;
+  const maxScrollAttempts = 100; // Increased from 20 to ensure we get all conversations
+  let noHeightChangeAttempts = 0;
+  const maxNoHeightChangeAttempts = 5; // Stop after 5 consecutive attempts with no height change
 
-  while (previousHeight !== currentHeight && scrollAttempts < maxScrollAttempts) {
-    // Check if we've hit any processed URLs
-    const foundProcessed = await page.evaluate((processedUrls) => {
-      const items = Array.from(
-        document.querySelectorAll('a[href*="/search/"], a[href*="/thread/"]')
-      ) as HTMLAnchorElement[];
-      return items.some((item) => processedUrls.includes(item.href));
-    }, doneFile.processedUrls);
-
-    if (foundProcessed) {
-      console.log("Found already processed conversation, stopping scroll");
-      break;
-    }
-
+  while (scrollAttempts < maxScrollAttempts && noHeightChangeAttempts < maxNoHeightChangeAttempts) {
     // Scroll to bottom
     await page.evaluate(() => {
       const container = document.querySelector("div.scrollable-container") || 
@@ -53,10 +42,20 @@ export async function scrollToBottomOfConversations(
       return container?.scrollHeight || document.documentElement.scrollHeight;
     });
     
+    if (previousHeight === currentHeight) {
+      noHeightChangeAttempts++;
+      console.log(`No new content loaded (attempt ${noHeightChangeAttempts}/${maxNoHeightChangeAttempts})`);
+    } else {
+      noHeightChangeAttempts = 0;
+      console.log(`Scrolled to height: ${currentHeight}`);
+    }
+    
     scrollAttempts++;
   }
   
-  if (scrollAttempts >= maxScrollAttempts) {
+  if (noHeightChangeAttempts >= maxNoHeightChangeAttempts) {
+    console.log("Reached end of conversations (no new content after multiple attempts)");
+  } else if (scrollAttempts >= maxScrollAttempts) {
     console.log("Reached maximum scroll attempts, proceeding with found conversations");
   }
 }

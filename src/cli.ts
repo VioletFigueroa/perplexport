@@ -15,6 +15,11 @@ program
     "Done file location (tracks which URLs have been downloaded before)",
     "done.json"
   )
+  .option(
+    "-c, --clear-history",
+    "Clear the done file and re-download all conversations",
+    false
+  )
   .requiredOption("-e, --email <email>", "Perplexity email")
   .parse();
 
@@ -25,6 +30,7 @@ async function main(): Promise<void> {
     outputDir: options.output,
     doneFilePath: options.doneFile,
     email: options.email,
+    clearHistory: options.clearHistory,
   });
 }
 

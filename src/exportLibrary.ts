@@ -12,6 +12,7 @@ export interface ExportLibraryOptions {
   outputDir: string;
   doneFilePath: string;
   email: string;
+  clearHistory?: boolean;
 }
 
 export default async function exportLibrary(options: ExportLibraryOptions) {
@@ -21,7 +22,14 @@ export default async function exportLibrary(options: ExportLibraryOptions) {
   await fs.mkdir(options.outputDir, { recursive: true });
 
   // Load done file
-  const doneFile = await loadDoneFile(options.doneFilePath);
+  let doneFile = await loadDoneFile(options.doneFilePath);
+  
+  if (options.clearHistory) {
+    console.log("Clearing download history...");
+    doneFile = { processedUrls: [] };
+    await saveDoneFile(doneFile, options.doneFilePath);
+  }
+  
   console.log(
     `Loaded ${doneFile.processedUrls.length} processed URLs from done file`
   );
@@ -41,6 +49,9 @@ export default async function exportLibrary(options: ExportLibraryOptions) {
 
     const conversationSaver = new ConversationSaver(page);
     await conversationSaver.initialize();
+
+    let successCount = 0;
+    let errorCount = 0;
 
     for (let i = 0; i < conversations.length; i++) {
       const conversation = conversations[i];
@@ -70,13 +81,22 @@ export default async function exportLibrary(options: ExportLibraryOptions) {
         // Save after each conversation in case of interruption
         await saveDoneFile(doneFile, options.doneFilePath);
         console.log(`✓ Progress saved`);
+        successCount++;
       } catch (error) {
         console.error(`✗ Error processing conversation:`, error);
+        errorCount++;
         // Continue with next conversation instead of crashing
       }
 
       await sleep(2000); // don't do it too fast
     }
+
+    console.log(`\n========================================`);
+    console.log(`Export complete!`);
+    console.log(`Successfully downloaded: ${successCount}`);
+    console.log(`Failed: ${errorCount}`);
+    console.log(`Total conversations processed: ${successCount + errorCount}/${conversations.length}`);
+    console.log(`========================================`);
 
     console.log("Done");
   } catch (error) {
