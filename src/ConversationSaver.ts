@@ -93,8 +93,10 @@ export class ConversationSaver {
       return {
         id: threadId,
         conversation: {
+          status: "placeholder",
           entries: [],
-          thread_url_slug: "",
+          has_next_page: false,
+          next_cursor: null,
         } as ConversationResponse,
       };
     } finally {
