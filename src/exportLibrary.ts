@@ -7,11 +7,15 @@ import { getConversations } from "./listConversations";
 import { login } from "./login";
 import renderConversation from "./renderConversation";
 import { loadDoneFile, saveDoneFile, sleep } from "./utils";
+import { runPostExportConversion, findConverter } from "./postExportHook";
 
 export interface ExportLibraryOptions {
   outputDir: string;
   doneFilePath: string;
   email: string;
+  convertToLogseq?: boolean;
+  converterPath?: string;
+  logseqOutputDir?: string;
 }
 
 export default async function exportLibrary(options: ExportLibraryOptions) {
@@ -67,6 +71,32 @@ export default async function exportLibrary(options: ExportLibraryOptions) {
     }
 
     console.log("Done");
+
+    // Run post-export conversion if requested
+    if (options.convertToLogseq) {
+      let converterPath = options.converterPath;
+      
+      if (!converterPath) {
+        console.log("🔍 Searching for conversation_converter.py...");
+        converterPath = await findConverter();
+        
+        if (!converterPath) {
+          console.warn(
+            "⚠️  Could not find conversation_converter.py. Skipping Logseq conversion."
+          );
+          console.warn(
+            "   Install it from: https://github.com/VioletFigueroa/conversation-to-logseq"
+          );
+          return;
+        }
+      }
+      
+      await runPostExportConversion(
+        options.outputDir,
+        converterPath,
+        options.logseqOutputDir
+      );
+    }
   } catch (error) {
     console.error("An error occurred:", error);
   } finally {

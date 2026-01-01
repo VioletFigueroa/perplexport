@@ -15,6 +15,18 @@ program
     "Done file location (tracks which URLs have been downloaded before)",
     "done.json"
   )
+  .option(
+    "--convert",
+    "Automatically convert exported conversations to Logseq format"
+  )
+  .option(
+    "--converter-path <path>",
+    "Path to conversation_converter.py (auto-detected if not provided)"
+  )
+  .option(
+    "--logseq-output <directory>",
+    "Output directory for Logseq notes (defaults to output/logseq-notes)"
+  )
   .requiredOption("-e, --email <email>", "Perplexity email")
   .parse();
 
@@ -25,6 +37,9 @@ async function main(): Promise<void> {
     outputDir: options.output,
     doneFilePath: options.doneFile,
     email: options.email,
+    convertToLogseq: options.convert,
+    converterPath: options.converterPath,
+    logseqOutputDir: options.logseqOutput,
   });
 }
 
